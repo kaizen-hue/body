@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sorry — Bati na tayo?</title>
+  <style>
+    :root{--bg:#e44e8a;--card:#e077b6;--accent:#ff6b9a;--muted:#4b1b2f}
+    html,body{height:100%;margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,'Helvetica Neue',Arial}
+    body{background:linear-gradient(180deg,#f290b7 0%, #f4009a 60%);display:flex;align-items:center;justify-content:center}
+
+    .card{background:var(--card);border-radius:18px;box-shadow:0 10px 30px rgba(0,0,0,.08);padding:36px;max-width:420px;width:90%;text-align:center;position:relative}
+    h1{margin:0 0 6px;font-size:28px;color:var(--muted)}
+    p{margin:0 0 18px;color:#5a2b3a}
+    .btn{display:inline-block;padding:12px 20px;border-radius:12px;background:linear-gradient(90deg,var(--accent),#ff95b0);color:white;text-decoration:none;font-weight:600;box-shadow:0 6px 18px rgba(255,107,154,.25);cursor:pointer;border:0}
+    .small{font-size:13px;color:#8b5a66;margin-top:12px}
+
+    /* modal */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .2s}
+    .overlay.open{opacity:1;pointer-events:auto}
+    .modal{background:var(--card);border-radius:12px;padding:12px;max-width:900px;width:92%;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+    .modal video, .modal iframe{width:100%;height:480px;border-radius:8px;background:#000}
+    .close{position:absolute;right:14px;top:14px;background:transparent;border:0;font-size:22px;color:#fff;cursor:pointer}
+
+    /* falling emojis */
+    .falling-emoji{pointer-events:none;position:fixed;inset:0;overflow:hidden;z-index:40}
+    .emoji{position:absolute;font-size:26px;will-change:transform,opacity;opacity:0;animation:drop 5s linear infinite}
+    @keyframes drop{0%{transform:translateY(-120%) rotate(0deg);opacity:0}10%{opacity:1}100%{transform:translateY(120vh) rotate(360deg);opacity:0}}
+
+    @media (max-width:600px){ .modal video, .modal iframe{height:260px} h1{font-size:22px} }
+  </style>
+</head>
+<body>
+  <div class="falling-emoji" id="falling"></div>
+
+  <div class="card" role="main">
+    <h1>Sorry po babe</h1>
+    <p>Hindi ko sinasadya ano man yung nagawa ko na kinasama ng loob mo babe</p>
+    <button class="btn" id="openBtn">Bati na tayo?</button>
+    <div class="small">Click the button and a video will appear ❤️</div>
+  </div>
+
+  <div class="overlay" id="overlay" aria-hidden="true">
+    <div class="modal">
+      <button class="close" id="closeBtn" aria-label="Close">✕</button>
+      <!-- Primary: local mp4 file. Put your video file named "video.mp4" in the same folder.
+           Fallback: replace the <source> or uncomment the iframe below to use YouTube. -->
+      <video id="heartVideo" controls playsinline>
+        <source src="body.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+      <!-- Example YouTube fallback (uncomment and replace VIDEO_ID if you prefer):
+      <iframe id="yt" src="https://www.youtube.com/embed/VIDEO_ID?autoplay=1&rel=0" title="YouTube video" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      -->
+    </div>
+  </div>
+
+  <script>
+    // open modal and autoplay video
+    const openBtn = document.getElementById('openBtn');
+    const overlay = document.getElementById('overlay');
+    const closeBtn = document.getElementById('closeBtn');
+    const heartVideo = document.getElementById('heartVideo');
+
+    openBtn.addEventListener('click', ()=>{
+      overlay.classList.add('open');
+      overlay.setAttribute('aria-hidden','false');
+      // try play the video; if autoplay is blocked, it will show controls so user can press play
+      const p = heartVideo.play();
+      if (p !== undefined) {
+        p.then(()=>{}).catch(()=>{
+          // autoplay blocked; show a small hint
+          heartVideo.setAttribute('controls','');
+        });
+      }
+      // trigger a short burst of emojis
+      burstEmojis(18);
+    });
+
+    closeBtn.addEventListener('click', closeModal);
+    overlay.addEventListener('click', (e)=>{ if(e.target===overlay) closeModal(); });
+
+    function closeModal(){
+      overlay.classList.remove('open');
+      overlay.setAttribute('aria-hidden','true');
+      try{ heartVideo.pause(); heartVideo.currentTime = 0; }catch(e){}
+    }
+
+    // falling emoji generator
+    const falling = document.getElementById('falling');
+    const EMOJIS = ['💖','💕','🥺','🌸','✨','🌟','😢','🤍'];
+
+    function makeEmoji(x){
+      const el = document.createElement('div');
+      el.className = 'emoji';
+      el.textContent = EMOJIS[Math.floor(Math.random()*EMOJIS.length)];
+      const left = x !== undefined ? x : Math.random()*100;
+      el.style.left = left + 'vw';
+      el.style.fontSize = (14 + Math.random()*30) + 'px';
+      el.style.animationDuration = (4 + Math.random()*4) + 's';
+      el.style.opacity = 0;
+      falling.appendChild(el);
+      // remove after animation
+      setTimeout(()=> el.remove(), 7000);
+    }
+
+    function burstEmojis(n){
+      for(let i=0;i<n;i++){
+        setTimeout(()=> makeEmoji(30 + Math.random()*40), i*80 + Math.random()*200);
+      }
+    }
+
+    // gentle continuous drift (very light)
+    setInterval(()=>{ if(Math.random()>.6) makeEmoji(); }, 1200);
+  </script>
+</body>
+</html>
